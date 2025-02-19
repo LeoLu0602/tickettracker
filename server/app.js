@@ -5,12 +5,15 @@ import StealthPlugin from "puppeteer-extra-plugin-stealth";
 const app = express();
 const port = 8080;
 
+// Middleware to parse JSON bodies
+app.use(express.json());
+
 // Add stealth plugin to puppeteer.
 puppeteer.use(StealthPlugin());
 
 /**
  * @param {string} url
- * @return {Promise<void>}
+ * @return {Promise<string>}
  */
 async function startTracking(url, quantity) {
     console.log("Launching browser...");
@@ -43,12 +46,16 @@ async function startTracking(url, quantity) {
     } else {
         console.log("Oops! Something went wrong.");
     }
+
+    return lowestPrice;
 }
 
-let url = "https://www.ticketmaster.com/event/Z7r9jZ1A7C3OP";
-let quantity = 5;
+app.post("/api/v1/trackers", async (req, res) => {
+    const { url, quantity } = req.body;
+    const lowestPrice = await startTracking(url, quantity);
 
-startTracking(url, quantity);
+    res.json({ lowestPrice });
+});
 
 app.listen(port, () => {
     console.log(`Listening on port ${port}`);
